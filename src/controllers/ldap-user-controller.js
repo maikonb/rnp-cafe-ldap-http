@@ -4,7 +4,6 @@ module.exports = {
 
   add: async function (req, res) {
     let r = await createUser(req.body);
-    console.log('resposta:',r);
     if (r)
       res.status(201).send({});
     else

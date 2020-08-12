@@ -109,12 +109,10 @@ async function createUser(user) {
           console.log(err);
           return resolve(false)
         }
-        console.log("OK");
         return resolve(true)
       }
     );      
   });
-  console.log(resAffiliationEntry);
   return resAffiliationEntry;
 }
 
