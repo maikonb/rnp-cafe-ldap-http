@@ -5,7 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/index"
+    "start": "node src/index",
+    "docker-build": "docker build -t ufr/rnp-cafe-ldap-http .",
+    "docker-run": "docker run --restart always --name rnp-cafe-ldap-http --network=\"host\" -d -e \"LDAP_URL=ldap://192.168.100.43:389\" -e \"LDAP_PASSWORD=maikon123\" -e \"LDAP_DN=cn=admin,dc=ufr,dc=edu,dc=br\"   ufr/rnp-cafe-ldap-http:latest"
   },
   "author": "",
   "license": "ISC",
