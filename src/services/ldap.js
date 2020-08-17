@@ -1,4 +1,5 @@
 const ldap = require('ldapjs');
+const assert = require('assert').strict;
 
 var client = null; 
 
@@ -116,38 +117,43 @@ async function createUser(user) {
   return resAffiliationEntry;
 }
 
-
-
-async function createUser1(user) {
-  if (null === client ) {
-    console.log("LDAP nao conectado.");
-    return Promise.resolve(false)
-  }
-
-  let userEntry = getEntryFromUser(user);
-  let userAffiliationEntry = getAffiliationFromUser(user);
-
-  client.add(`uid=${userEntry.uid},ou=people,dc=ufr,dc=edu,dc=br`, userEntry, function(err) {
-    
-    if (err != null) {
-      console.log(err);
-      return Promise.resolve(false);
-    }
-    
-    client.add(
-      `brEduAffiliation=1,uid=${userEntry.uid},ou=people,dc=ufr,dc=edu,dc=br`, 
-      userAffiliationEntry, function(err) { 
+async function checkIfUserExists(uid) {
+  let found = await new Promise((resolve) => {
+    client.search(
+      `uid=${uid},ou=people,dc=ufr,dc=edu,dc=br`, {}, 
+      (err, res) => {
         if (err != null) {
-          console.log(err);
-          return Promise.resolve(false)
+          resolve(false);
         }
-
-        console.log("OK");
-        return Promise.resolve(true)
-
+        res.on('error', function(err) {
+          resolve(false);
+        });        
+        res.on('end', function(result) {
+          (result.status === 0) ? resolve(true) : resolve(false);
+        });
       }
     );
   });
-  
+  return found;
 }
-module.exports = { initializeLdapClient, createUser }
+
+async function changePassword(email, newPassword) {
+  let found = await checkIfUserExists(email);
+  if (! found) {
+    return false;
+  }
+  let password = Buffer.from(newPassword,'hex').toString('base64');
+  const modification = {
+    userPassword: `{MD5}${password}`,
+  };
+  var changeObject = new ldap.Change({ operation: 'replace', modification });
+  let changeOk = await new Promise((resolve) => {
+    client.modify(
+      `uid=${email},ou=people,dc=ufr,dc=edu,dc=br`, changeObject, 
+      err => resolve (null == err) 
+    );
+  });
+  return changeOk;
+}
+
+module.exports = { initializeLdapClient, createUser, changePassword}

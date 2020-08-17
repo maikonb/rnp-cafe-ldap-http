@@ -1,4 +1,4 @@
-const { createUser } = require('../services/ldap');
+const { createUser, changePassword } = require('../services/ldap');
 
 module.exports = { 
 
@@ -20,6 +20,17 @@ module.exports = {
   
   disable_user: function (req, res) {
     res.status(200).send({});
+  },
+
+  change_password: async function(req, res) {
+    console.log(req.body);
+    if (! req.body.hasOwnProperty('password'))
+      return res.status(400)
+        .send('Atributo  `password` não encontrado na requisição');
+    let newPassword = req.body.password;
+    let email = req.params.email;
+    let r = await changePassword(email, newPassword);
+    (r) ? res.status(200).end() : res.status(401).end();
   }
 
 };
